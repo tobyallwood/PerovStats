@@ -3,7 +3,9 @@ An image analysis program to process AFM scans of perovskite and perform analysi
 
 ## Basic process command
 
-```perovstats -d "[path/to/data/file/directory]"```
+```perovstats```
+
+Uses `src/perovstats/default_config.yaml` for configuration options, below details custom arguments avaliable.
 
 ## Command-line interface
 
