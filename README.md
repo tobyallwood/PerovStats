@@ -1,12 +1,30 @@
 # PerovStats
 An image analysis program to process AFM scans of perovskite and perform analysis on them
 
-## Basic process command
+## Installation
 
-Run `perovstats` in the terminal.
+To install PerovStats directly from GitHub via ssh:
+
+```console
+pip install git@github.com:tobyallwood/PerovStats.git
+```
+
+To install PerovStats by cloning from the GitHub repository:
+
+```console
+git clone https://github.com/tobyallwood/PerovStats.git
+cd PerovStats
+python -m pip install .
+```
+
+## Documentation
+
+### Basic usage
+
+Run the command `perovstats` in the terminal.
 - Uses `src/perovstats/default_config.yaml` for configuration options, below details custom arguments avaliable.
 
-## Command-line interface
+### Command-line interface
 
 ```console
 usage: perovstats [-h] [-c CONFIG_FILE] [-d BASE_DIR] [-e FILE_EXT] [-n CHANNEL] [-o OUTPUT_DIR] [-f CUTOFF_FREQ_NM]
