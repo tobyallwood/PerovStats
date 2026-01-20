@@ -46,7 +46,7 @@ def find_grains(masks: list[Mask], names: list[str] | None = None) -> None:
     all_masks_data = {}
     data = []
 
-    for mask_object in masks:
+    for mask_num, mask_object in enumerate(masks):
         filename = mask_object.filename
         file_directory = mask_object.file_directory
 
@@ -88,36 +88,34 @@ def find_grains(masks: list[Mask], names: list[str] | None = None) -> None:
         }
         all_masks_data[f"{filename}-{config_yaml['cutoff_freq_nm']}"] = mask_data
 
-        data.append(
-            {
-                "filename": filename,
-                "grains_per_nm2": grains_per_nm2,
-                "mask_size_x_nm": mask_size_x_nm,
-                "mask_size_y_nm": mask_size_y_nm,
-                "mask_area_nm": mask_area_nm,
-                "num_grains": len(mask_areas),
-                "dir": file_directory,
-                "cutoff_freq_nm": config_yaml["cutoff_freq_nm"],
-                "cutoff": config_yaml["cutoff"],
-            },
-        )
+        new_mask_data = {
+            "filename": filename,
+            "mask_rgb": labelled_mask_rgb,
+            "grains_per_nm2": grains_per_nm2,
+            "mask_size_x_nm": mask_size_x_nm,
+            "mask_size_y_nm": mask_size_y_nm,
+            "mask_area_nm": mask_area_nm,
+            "num_grains": len(mask_areas),
+            "dir": file_directory,
+            "cutoff_freq_nm": config_yaml["cutoff_freq_nm"],
+            "cutoff": config_yaml["cutoff"],
+        }
 
-    if data:
-        # grain_stats = pd.DataFrame(data)
-        all_grains = {}
-        for i, mask_area in enumerate(mask_areas):
-            all_grains[i] = mask_area
-        grain_stats = Grains(all_grains=all_grains, **data[0])
+        data.append(new_mask_data)
+
+
+        # Assign area data for individual grains to appropriate classes
+        for key, value in new_mask_data.items():
+            setattr(mask_object, key, value)
+        for grain_area in mask_areas:
+            mask_object.grains = Grains(all_grains={})
+            mask_object.grains.all_grains[len(mask_object.grains.all_grains)] = Grain(area=grain_area)
 
         logger.info(
-            f"~~~ obtained {grain_stats.num_grains} grains from mask ~~~",
+            f"~~~ obtained {mask_object.num_grains} grains from mask {mask_num} ~~~",
         )
 
-        create_plots(filename, all_masks_grain_areas, all_masks_data, nm_to_micron=NM_TO_MICRON,)
-
-        # Save grain data to .csv
-    else:
-        LOGGER.warning("No images to process in grains.")
+        create_plots(filename, mask_areas, new_mask_data, nm_to_micron=NM_TO_MICRON)
 
 
 @staticmethod

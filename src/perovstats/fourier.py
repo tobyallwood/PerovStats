@@ -163,11 +163,16 @@ def create_masks(image_dicts, fs_config, grain_config) -> None:
             dump_yaml(mask_config, outfile, default_flow_style=False)
         # Convert to image format
         plt.imsave(output_dir / fname / f"{fname}_mask.jpg", mask)
-        # View images
-        # plot_compare(im, mask, figsize=(15, 6), overlay=True, title=fname)
 
         fdir = output_dir / fname
-        masks.append(Mask(mask, fname, fdir, fs_config))
+        masks.append(
+            Mask(
+                mask=mask,
+                filename=fname,
+                file_directory=fdir,
+                config=fs_config
+            )
+        )
 
     return masks
 
@@ -244,10 +249,10 @@ def split_frequencies(image_dicts, fs_config) -> list[np.real]:
         #img = Image.fromarray(arr * 255).convert("L")
         #img.save(file_output_dir / f"{filename}_low_pass.jpg")
 
-        #arr = topostats_object["image_original"]
-        #arr = (arr - arr.min()) / (arr.max() - arr.min())
-        #img = Image.fromarray(arr * 255).convert("L")
-        #img.save(file_output_dir / f"{filename}_original.jpg")
+        arr = topostats_object["image_original"]
+        arr = (arr - arr.min()) / (arr.max() - arr.min())
+        img = Image.fromarray(arr * 255).convert("L")
+        img.save(file_output_dir / f"{filename}_original.jpg")
 
         # Save configuration metadata for frequency splitting
         with Path(file_output_dir / f"{filename}_config.yaml").open("w") as outfile:

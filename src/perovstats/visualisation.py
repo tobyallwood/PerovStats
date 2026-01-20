@@ -37,28 +37,17 @@ DATA_ANNOTATED = Path(
 
 def create_plots(
         filename: str,
-        all_masks_grain_areas: list,
-        all_masks_data: dict[str, dict[str, npt.NDArray | float]],
+        mask_areas: list,
+        mask_data: dict[str, dict[str, npt.NDArray | float]],
         nm_to_micron: float,
 ):
     """Show plots for grain area distribution and the rgb image of identified grains"""
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
     fig.canvas.manager.set_window_title("Grain size distributions")
-    plot_areas(all_masks_grain_areas, nm_to_micron, title="all masks areas", units="nm", ax=axes[0])
-    for i, (filename, mask_data) in enumerate(all_masks_data.items()):
-        plot_coloured_grains(filename, nm_to_micron, mask_data, col_num=1, ax=axes[i + 1])
+    plot_areas(mask_areas, nm_to_micron, title="grain area distribution", units="nm", ax=axes[0])
+    plot_coloured_grains(filename, nm_to_micron, mask_data, col_num=1, ax=axes[1])
     plt.tight_layout()
     plt.show()
-
-    # sns.histplot(
-    #     grain_stats,
-    #     x="grains_per_nm2",
-    #     hue="mask_size_x_nm",
-    #     kde=False,
-    #     bins="auto",
-    #     log_scale=True,
-    # )
-    # plt.show()
 
 
 def plot_areas(areas: list, nm_to_micron: float, title: str | None = None, units: str = "um", ax=None) -> None:
@@ -67,7 +56,6 @@ def plot_areas(areas: list, nm_to_micron: float, title: str | None = None, units
         plt.gca()
     if title is None:
         title = ""
-    title = title + f" n:{len(areas)}"
     if units == "um":
         areas = [area * nm_to_micron**2 for area in areas]
         ax.set_xlabel("area (µm²)")
