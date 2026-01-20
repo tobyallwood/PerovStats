@@ -12,6 +12,7 @@ from ruamel.yaml import YAML
 from skimage.color import label2rgb
 from skimage.measure import label
 from skimage.measure import regionprops
+from skimage import morphology
 
 from .classes import Mask, Grains, Grain
 from .visualisation import create_plots
@@ -60,7 +61,11 @@ def find_grains(masks: list[Mask], names: list[str] | None = None) -> None:
         mask = np.invert(mask)
 
         labelled_mask = label(mask, connectivity=1)
-        labelled_mask_rgb = label2rgb(labelled_mask, bg_label=0)
+        # labelled_mask_rgb = label2rgb(labelled_mask, bg_label=0)
+
+        # Remove grains touching the edge
+        labelled_mask = tidy_border(labelled_mask)
+        labelled_mask_rgb = label2rgb(labelled_mask, bg_label=0, saturation=0)
 
         mask_regionprops = regionprops(labelled_mask)
         mask_areas = [
@@ -113,3 +118,33 @@ def find_grains(masks: list[Mask], names: list[str] | None = None) -> None:
         # Save grain data to .csv
     else:
         LOGGER.warning("No images to process in grains.")
+
+
+@staticmethod
+def tidy_border(mask: npt.NDArray[np.bool_]) -> npt.NDArray[np.bool_]:
+    """
+    Remove whole grains touching the border.
+
+    Parameters
+    ----------
+    mask : npt.NDArray
+        3-D Numpy array of the grain mask tensor.
+
+    Returns
+    -------
+    npt.NDArray
+        3-D Numpy array of the grain mask tensor with grains touching the border removed.
+    """
+    # Find the grains that touch the border then remove them from the full mask tensor
+    mask_labelled = morphology.label(mask)
+    mask_regionprops = regionprops(mask_labelled)
+    for region in mask_regionprops:
+        if (
+            region.bbox[0] == 0
+            or region.bbox[1] == 0
+            or region.bbox[2] == mask.shape[0]
+            or region.bbox[3] == mask.shape[1]
+        ):
+            mask[mask_labelled == region.label] = 0
+
+    return mask

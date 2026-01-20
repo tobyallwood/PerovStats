@@ -33,5 +33,5 @@ class Grains:
 @dataclass
 class PerovStats:
     filename: str
-    mask: Mask | None = None
+    masks: dict[str, Mask] | None = None
     grains: Grains | None = None

@@ -168,6 +168,8 @@ def main(args: list[str] | None = None) -> None:
     fs_config["output_dir"] = config["output_dir"]
     fs_config["base_dir"] = config["base_dir"]
 
+    grain_config = config.get("grains", {})
+
     # Update from command line arguments if specified
     fs_config.update({k: v for k, v in vars(args).items() if v is not None})
 
@@ -223,7 +225,7 @@ def main(args: list[str] | None = None) -> None:
 
 
     # Apply fourier analysis and create binary mask of resultant high-pass image
-    masks = create_masks(image_dicts, fs_config)
+    masks = create_masks(image_dicts, fs_config, grain_config)
 
     # Find and display grains from mask
     find_grains(masks)

@@ -73,7 +73,7 @@ DATA_CONFIG = [
 ]
 
 THRESHOLD_FUN = threshold_mad
-THRESHOLD_ARGS = {"k": 12}
+# THRESHOLD_ARGS = {"k": 12}
 SMOOTH_FUN = ski.filters.gaussian
 DIFF_GAUSS_SIGMA = (1, 3)
 GAUSS_SIGMA = 8
@@ -91,7 +91,7 @@ else:
 # Segmentation mask configuration
 MASK_CONFIG = {
     "threshold": THRESHOLD_FUN,
-    "threshold_args": THRESHOLD_ARGS,
+    # "threshold_args": THRESHOLD_ARGS,
     "smooth": SMOOTH_FUN,
     "smooth_args": SMOOTH_ARGS,
     "clean": CLEAN_FUN,
@@ -119,7 +119,7 @@ def plot_compare(
     plt.show()
 
 
-def create_masks(image_dicts, fs_config) -> None:
+def create_masks(image_dicts, fs_config, grain_config) -> None:
     # for cutoff_freq_nm in CUTOFF_FREQ_NM:
     #     for config in DATA_CONFIG:
     #         output_dir = Path(
@@ -156,6 +156,7 @@ def create_masks(image_dicts, fs_config) -> None:
             "area_threshold": AREA_THRESHOLD_NM2 / (pixel_to_nm_scaling**2),
             "disk_radius": DISK_RADIUS_FACTOR / pixel_to_nm_scaling,
         }
+        mask_config["threshold_args"] = {"k": grain_config['threshold']}
         mask = create_grain_mask(im, **mask_config)
         np.save(output_dir / fname / f"{fname}_mask.npy", mask)
         with Path(output_dir / fname / f"{fname}_mask.yaml").open("w") as outfile:
