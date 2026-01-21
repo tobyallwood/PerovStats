@@ -10,7 +10,7 @@ def save_to_csv(data: Mask) -> None:
     parent_dict = data.__dict__
     grains_dict = parent_dict.pop("grains")
 
-    for grain_num, grain in grains_dict.items():
+    for grain in grains_dict.values():
         row = {
             **grain.__dict__,
             **parent_dict
