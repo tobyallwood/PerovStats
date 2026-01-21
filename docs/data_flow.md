@@ -12,7 +12,7 @@ The program will:
 5. Exports this data to a `.csv` file
 
 ## Output
-All output data is saved to `/output/` (editable in the config) under a sub-folder with the same name as the original `.spm` file.
+All output data is by default saved to `/output/` (editable in the config) under a sub-folder with the same name as the original `.spm` file.
 
 This folder contains:
 - A copy of the config settings used to generate the data
