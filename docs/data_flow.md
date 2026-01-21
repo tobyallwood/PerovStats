@@ -9,7 +9,7 @@ The program will:
 2. Performs a fourier transform to isolate the topograhy of the perovskite material
 3. Analyses this new image and generate a mask outlining the edges of grains
 4. Counts and generates data about both individual grains and averages of all grains in the scan
-5. Exports this data to `.csv` files
+5. Exports this data to `.csv` files along with a copy of the configuration options used in a `.yaml` file
 
 ## Output
 All output data is by default saved to a sub-folder with the same name as the original `.spm` file under an `/output/` directory (editable in the config).
