@@ -4,6 +4,18 @@ import numpy as np
 
 @dataclass
 class Grain:
+    """
+    Class for storing individual grains.
+
+    Parameters
+    ----------
+    grain_id : int | None
+        Unique identifier for the grain.
+    grain_area : float | None
+        Area of the grain in nm^2.
+    grain_circularity_rating : float | None
+        Unifinished var.
+    """
     grain_id: int
     grain_area: float | None = None
     grain_circularity_rating: float | None = None
@@ -18,6 +30,42 @@ class Grain:
 
 @dataclass
 class ImageData:
+    """
+    Class for storing overall data for a processed image.
+
+    Parameters
+    ----------
+    topostats_object : any
+        TopoStats object generated and used by the filtering stage.
+    mask : np.ndarray
+        Boolean mask showing grain outlines.
+    high_pass : np.ndarray
+        Image showing the frequencies left above the frequency cutoff after performing a fourier transform.
+    low_pass : np.ndarray
+        Image showing the frequencies cut off by a fourier transform.
+    grains : dict[int, Grain]
+        Dictionary containing all grains as class objects, with an id int as the key.
+    file_directory : str
+        The folder to save output data to
+    filename : str
+        The name of the original .spm file without the extension
+    mask_rgb : np.ndarray
+        Image of the mask with grains coloured in for easier viewing.
+    grains_per_nm2 : float
+        The amount of grains in the image for every nm^2.
+    mask_size_x_nm : float
+        The width of the image in nm.
+    mask_size_y_nm : float
+        The height of the image in nm.
+    mask_area_nm : float
+        The area of the image in nm^2.
+    num_grains : int
+        The total number of grains in the image.
+    cutoff_freq_nm : float
+        The frequency to cutoff during the highpass of the fourier transform in nm.
+    cutoff : float
+        The actual cutoff for the fourier transform.
+    """
     topostats_object: any
     mask: np.ndarray | None = None
     high_pass: np.ndarray | None = None
@@ -50,5 +98,15 @@ class ImageData:
 
 @dataclass
 class PerovStats:
+    """
+    Class for all data collected in a run of PerovStats.
+
+    Parameters
+    ----------
+    images : list[ImageData] | None
+        A list of all images inputted, containing the class object for each.
+    config : dict[str, any] | None
+        A dictionary containing all the confg options used, with the key being the name.
+    """
     images: list[ImageData] | None = None
     config: dict[str, any] | None = None

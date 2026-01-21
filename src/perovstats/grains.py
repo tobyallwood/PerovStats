@@ -31,17 +31,20 @@ config_yaml_files = list(DATA_DIR.glob("*/**/*_config.yaml"))
 logger.info(f"found {len(config_yaml_files)} config files")
 
 
-def get_file_names() -> list[str]:
-    files_to_include = []
-    if DATA_ANNOTATED.exists():
-        data_annotated = pd.read_csv(DATA_ANNOTATED)
-        data_to_include = data_annotated[data_annotated.include == "Y"]
-        files_to_include = data_to_include.filename.apply(Path, axis=1)
-    names = [f.stem for f in files_to_include]
-    return names
+def find_grains(perovstats_object: PerovStats) -> None:
+    """
+    Method to find grains from a mask and list the stats about them.
 
+    Parameters
+    ----------
+    perovstats_object : PerovStats
+        Class object containing all data from the process.
 
-def find_grains(perovstats_object) -> None:
+    Returns
+    -------
+    parovstats_object : PerovStats
+        The updated class object.
+    """
     all_masks_grain_areas = []
     all_masks_data = {}
     data = []

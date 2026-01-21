@@ -73,10 +73,22 @@ def plot_coloured_grains(
         filename: str,
         nm_to_micron: float,
         mask_data: dict[str, dict[str, npt.NDArray | float]],
-        col_num: int = 1,
-        ax = None,
+        ax: int = None,
 ) -> None:
-    """Plot coloured grains."""
+    """
+    Plot coloured grains.
+
+    Parameters
+    ----------
+    filename : str
+        Name of the original .spm file
+    nm_to_micron : float
+        Scale factor of nm to microns.
+    mask_data : dict[str, dict[str, npt.NDArray | float]]
+        Dictionary containing an array of the mask to be coloured.
+    ax : int
+        The axis containing the coloured plot for the figure. (Improve this one).
+    """
     if ax is None:
         ax = plt.gca()
     # num_items = len(masks_data)

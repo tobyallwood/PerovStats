@@ -146,7 +146,7 @@ def get_arg(key: str, args: Namespace, config: dict, default: str | None = None)
 
 def main(args: list[str] | None = None) -> None:
     """
-    Entrypoint for perovstats processes, load the .spm files and start analysis
+    Entrypoint for perovstats, calls main functions in the process.
 
     Parameters
     ----------
