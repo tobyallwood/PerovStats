@@ -6,15 +6,15 @@
 ## Processing steps
 The program will:
 1. Loads the `.spm` file and convert to an image mask
-2. Optionally performs a fourier transform to isolate the topograhy of the perovskite material
+2. Performs a fourier transform to isolate the topograhy of the perovskite material
 3. Analyses this new image and generate a mask outlining the edges of grains
 4. Counts and generates data about both individual grains and averages of all grains in the scan
-5. Exports this data to a `.csv` file
+5. Exports this data to `.csv` files
 
 ## Output
-All output data is by default saved to `/output/` (editable in the config) under a sub-folder with the same name as the original `.spm` file.
+All output data is by default saved to a sub-folder with the same name as the original `.spm` file under an `/output/` directory (editable in the config).
 
-This folder contains:
+The folder contains:
 - A copy of the config settings used to generate the data
 - A `.jpg` of the post-fourier transform scan
 - A `.jpg` of the grain outline mask
