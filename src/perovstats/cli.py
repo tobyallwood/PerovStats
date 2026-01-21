@@ -34,6 +34,8 @@ from topostats.io import LoadScans
 
 from .grains import find_grains
 from .fourier import create_masks
+from .statistics import save_to_csv
+from .classes import ImageData, PerovStats
 
 LOGGER = logging.getLogger(__name__)
 
@@ -143,7 +145,7 @@ def get_arg(key: str, args: Namespace, config: dict, default: str | None = None)
 
 def main(args: list[str] | None = None) -> None:
     """
-    Entrypoint for perovstats processes
+    Entrypoint for perovstats processes, load the .spm files and start analysis
 
     Parameters
     ----------
@@ -165,10 +167,6 @@ def main(args: list[str] | None = None) -> None:
             config = safe_load(f)
 
     fs_config = config.get("freqsplit", {})
-    fs_config["output_dir"] = config["output_dir"]
-    fs_config["base_dir"] = config["base_dir"]
-
-    grain_config = config.get("grains", {})
 
     # Update from command line arguments if specified
     fs_config.update({k: v for k, v in vars(args).items() if v is not None})
@@ -201,14 +199,21 @@ def main(args: list[str] | None = None) -> None:
     # Values are the individual image data dictionaries
     image_dicts = loadscans.img_dict
 
-    LOGGER.info("Loaded %s images", len(image_dicts))
+    perovstats_object = PerovStats(config=config, images=[])
+    for filename, topostats_object in image_dicts.items():
+        image_data = ImageData(filename=filename, topostats_object=topostats_object)
+        perovstats_object.images.append(image_data)
+
+    LOGGER.info("Loaded %s images", len(perovstats_object.images))
 
     filter_config = config["filter"]
     if filter_config["run"]:
         filter_config.pop("run")
         LOGGER.info("%s", filter_config)
         # apply filters
-        for filename, topostats_object in image_dicts.items():
+        for image_data in perovstats_object.images:
+            filename = image_data.filename
+            topostats_object = image_data.topostats_object
             original_image = topostats_object["image_original"]
             pixel_to_nm_scaling = topostats_object["pixel_to_nm_scaling"]
             LOGGER.debug("[%s] Image dimensions: %s", filename, original_image.shape)
@@ -220,12 +225,15 @@ def main(args: list[str] | None = None) -> None:
                 pixel_to_nm_scaling=pixel_to_nm_scaling,
                 **_filter_config,
             )
+            perovstats_object.config["pixel_to_nm_scaling"] = pixel_to_nm_scaling
             filters.filter_image()
-            topostats_object["image_flattened"] = filters.images["gaussian_filtered"]
-
 
     # Apply fourier analysis and create binary mask of resultant high-pass image
-    masks = create_masks(image_dicts, fs_config, grain_config)
+    create_masks(perovstats_object)
 
     # Find and display grains from mask
-    find_grains(masks)
+    find_grains(perovstats_object)
+
+    # Save each image's data to their own .csv file
+    for image_object in perovstats_object.images:
+        save_to_csv(perovstats_object.config, image_object)

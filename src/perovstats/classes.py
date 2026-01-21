@@ -10,9 +10,11 @@ class Grain:
 
 
 @dataclass
-class Mask:
-    mask: np.ndarray
-    config: dict[str, any]
+class ImageData:
+    topostats_object: any
+    mask: np.ndarray | None = None
+    high_pass: np.ndarray | None = None
+    low_pass: np.ndarray | None = None
     grains: dict[int, Grain] | None = None
     file_directory: str | None = None
     filename: str | None = None
@@ -22,12 +24,11 @@ class Mask:
     mask_size_y_nm: float | None = None
     mask_area_nm: float | None = None
     num_grains: int | None = None
-    dir: str | None = None
     cutoff_freq_nm: float | None = None
     cutoff: float | None = None
 
 
 @dataclass
 class PerovStats:
-    filename: str
-    masks: dict[str, Mask] | None = None
+    images: list[ImageData] | None = None
+    config: dict[str, any] | None = None

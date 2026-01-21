@@ -14,7 +14,6 @@ from .freqsplit import frequency_split
 from .segmentation import clean_mask
 from .segmentation import create_grain_mask
 from .segmentation import threshold_mad
-from .classes import Mask
 
 
 LOGGER = logging.getLogger(__name__)
@@ -91,35 +90,13 @@ else:
 # Segmentation mask configuration
 MASK_CONFIG = {
     "threshold": THRESHOLD_FUN,
-    # "threshold_args": THRESHOLD_ARGS,
     "smooth": SMOOTH_FUN,
     "smooth_args": SMOOTH_ARGS,
     "clean": CLEAN_FUN,
 }
 
-def plot_compare(
-    im1: np.ndarray,
-    im2: np.ndarray,
-    figsize: tuple[float] = (10, 8),
-    overlay: bool = False,
-    title: str | None = None,
-) -> None:
-    """Compare two plots side by side."""
-    fig, ax = plt.subplots(ncols=2, figsize=figsize)
-    ax[0].imshow(im1)
-    ax[0].set_title("Original")
-    if overlay:
-        ax[1].imshow(im1, cmap="gray")
-        ax[1].imshow(im2, cmap="jet", alpha=0.25)
-    else:
-        ax[1].imshow(im2)
-        ax[1].set_title("Mask")
-    if title:
-        fig.suptitle(title)
-    plt.show()
 
-
-def create_masks(image_dicts, fs_config, grain_config) -> None:
+def create_masks(perovstats_object) -> None:
     # for cutoff_freq_nm in CUTOFF_FREQ_NM:
     #     for config in DATA_CONFIG:
     #         output_dir = Path(
@@ -139,45 +116,42 @@ def create_masks(image_dicts, fs_config, grain_config) -> None:
     #             "-o",
     #             output_dir.as_posix(),
     #         ]
-    split_frequencies(image_dicts, fs_config)
+    split_frequencies(perovstats_object)
 
-    output_dir = Path(fs_config["output_dir"])
-    files = sorted(output_dir.glob("*\*_high_pass.npy"))
+    output_dir = Path(perovstats_object.config["output_dir"])
 
-    masks = []
-    for f in files:
-        fname = f.name.replace("_high_pass.npy", "")
-        im = np.load(f)
-        with (f.parent / f"{fname}_config.yaml").open() as conf:
-            fs_config = safe_load(conf)
-        pixel_to_nm_scaling = fs_config["pixel_to_nm_scaling"]
+    for i, image in enumerate(perovstats_object.images):
+        # For each image create and save a mask
+        fname = image.filename
+        im = image.high_pass
+        pixel_to_nm_scaling = perovstats_object.config["pixel_to_nm_scaling"]
         mask_config = MASK_CONFIG.copy()
         mask_config["clean_args"] = {
             "area_threshold": AREA_THRESHOLD_NM2 / (pixel_to_nm_scaling**2),
             "disk_radius": DISK_RADIUS_FACTOR / pixel_to_nm_scaling,
         }
-        mask_config["threshold_args"] = {"k": grain_config['threshold']}
-        mask = create_grain_mask(im, **mask_config)
-        np.save(output_dir / fname / f"{fname}_mask.npy", mask)
-        with Path(output_dir / fname / f"{fname}_mask.yaml").open("w") as outfile:
-            dump_yaml(mask_config, outfile, default_flow_style=False)
+        mask_config["threshold_args"] = {"k": perovstats_object.config["grains"]['threshold']}
+        np_mask = create_grain_mask(im, **mask_config)
+
+        perovstats_object.images[i].mask = np_mask
+
+        clean_args = mask_config.pop("clean_args")
+        mask_config = mask_config | clean_args
+        mask_config.pop("clean")
+        mask_config.pop("threshold")
+        mask_config.pop("smooth")
+        mask_config.pop("threshold_args")
+
+        new_config = {
+            "mask": mask_config
+        }
+        perovstats_object.config = perovstats_object.config | new_config
+
         # Convert to image format
-        plt.imsave(output_dir / fname / f"{fname}_mask.jpg", mask)
-
-        fdir = output_dir / fname
-        masks.append(
-            Mask(
-                mask=mask,
-                filename=fname,
-                file_directory=fdir,
-                config=fs_config
-            )
-        )
-
-    return masks
+        plt.imsave(output_dir / fname / f"{fname}_mask.jpg", np_mask)
 
 
-def split_frequencies(image_dicts, fs_config) -> list[np.real]:
+def split_frequencies(perovstats_object) -> list[np.real]:
     """
     Carry out frequency splitting on a batch of files.
 
@@ -191,12 +165,19 @@ def split_frequencies(image_dicts, fs_config) -> list[np.real]:
     ValueError
         If neither `cutoff` nor `cutoff_freq_nm` argument supplied.
     """
-    cutoff_freq_nm = fs_config["cutoff_freq_nm"]
-    edge_width = fs_config["edge_width"]
-    output_dir = Path(fs_config["output_dir"])
+    # cutoff_freq_nm = fs_config["cutoff_freq_nm"]
+    # edge_width = fs_config["edge_width"]
+    # output_dir = Path(fs_config["output_dir"])
 
-    for filename, topostats_object in image_dicts.items():
-        fs_config["filename"] = filename
+    cutoff_freq_nm = perovstats_object.config["freqsplit"]["cutoff_freq_nm"]
+    edge_width = perovstats_object.config["freqsplit"]["edge_width"]
+    output_dir = Path(perovstats_object.config["output_dir"])
+
+    images = []
+
+    for image_data in perovstats_object.images:
+        filename = image_data.filename
+        topostats_object = image_data.topostats_object
 
         file_output_dir = Path(output_dir / filename)
         file_output_dir.mkdir(parents=True, exist_ok=True)
@@ -213,13 +194,13 @@ def split_frequencies(image_dicts, fs_config) -> list[np.real]:
         else:
             image = topostats_object["image_original"]
         pixel_to_nm_scaling = topostats_object["pixel_to_nm_scaling"]
-        fs_config["pixel_to_nm_scaling"] = pixel_to_nm_scaling
+        perovstats_object.config["pixel_to_nm_scaling"] = pixel_to_nm_scaling
         LOGGER.debug("[%s] Image dimensions: ", image.shape)
         LOGGER.info("[%s] : *** Frequency splitting ***", filename)
 
         if cutoff_freq_nm:
             cutoff = 2 * pixel_to_nm_scaling / cutoff_freq_nm
-            fs_config["cutoff"] = cutoff
+            perovstats_object.config["freqsplit"]["cutoff"] = cutoff
 
         LOGGER.info("[%s] : pixel_to_nm_scaling: %s", filename, pixel_to_nm_scaling)
         LOGGER.info("[%s] : cutoff: %s, edge_width: %s", filename, cutoff, edge_width)
@@ -232,6 +213,18 @@ def split_frequencies(image_dicts, fs_config) -> list[np.real]:
 
         # Save high pass image data
         np.save(file_output_dir / f"{filename}_high_pass.npy", high_pass)
+
+        # Create mask object for this file and include the high/low pass data and file names
+        # images.append(
+        #     ImageData(
+        #         high_pass=high_pass,
+        #         low_pass=low_pass,
+        #         file_directory=file_output_dir
+        #     )
+        # )
+        image_data.high_pass = high_pass
+        image_data.low_pass = low_pass
+        image_data.file_directory = file_output_dir
 
         # Save low pass image data
         # np.save(output_dir / f"{filename}_low_pass.npy", low_pass)
@@ -255,5 +248,5 @@ def split_frequencies(image_dicts, fs_config) -> list[np.real]:
         img.save(file_output_dir / f"{filename}_original.jpg")
 
         # Save configuration metadata for frequency splitting
-        with Path(file_output_dir / f"{filename}_config.yaml").open("w") as outfile:
-            safe_dump(fs_config, outfile, default_flow_style=False)
+        # with Path(file_output_dir / f"{filename}_config.yaml").open("w") as outfile:
+        #     safe_dump(fs_config, outfile, default_flow_style=False)

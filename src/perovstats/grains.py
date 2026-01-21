@@ -14,9 +14,8 @@ from skimage.measure import label
 from skimage.measure import regionprops
 from skimage import morphology
 
-from .classes import Mask, Grain
+from .classes import ImageData, Grain, PerovStats
 from .visualisation import create_plots
-from .statistics import save_to_csv
 
 LOGGER = logging.getLogger(__name__)
 
@@ -42,23 +41,22 @@ def get_file_names() -> list[str]:
     return names
 
 
-def find_grains(masks: list[Mask], names: list[str] | None = None) -> None:
+def find_grains(perovstats_object) -> None:
     all_masks_grain_areas = []
     all_masks_data = {}
     data = []
 
-    for mask_num, mask_object in enumerate(masks):
-        filename = mask_object.filename
-        file_directory = mask_object.file_directory
+    for image_num, image_object in enumerate(perovstats_object.images):
+        filename = image_object.filename
+        file_directory = image_object.file_directory
 
-        LOGGER.info(f"processing file {mask_object.filename:<50}")
+        LOGGER.info(f"processing file {image_object.filename:<50}")
 
-        config_yaml = mask_object.config
+        config_yaml = perovstats_object.config
 
         pixel_to_nm_scaling = config_yaml["pixel_to_nm_scaling"]
 
-        mask_file = file_directory / f"{filename}_mask.npy"
-        mask = np.load(mask_file).astype(bool)
+        mask = image_object.mask.astype(bool)
         mask = np.invert(mask)
 
         labelled_mask = label(mask, connectivity=1)
@@ -87,7 +85,7 @@ def find_grains(masks: list[Mask], names: list[str] | None = None) -> None:
             "mask_area_nm": mask_area_nm,
             "num_grains": len(mask_areas),
         }
-        all_masks_data[f"{filename}-{config_yaml['cutoff_freq_nm']}"] = mask_data
+        all_masks_data[f"{filename}-{config_yaml['freqsplit']['cutoff_freq_nm']}"] = mask_data
 
         new_mask_data = {
             "filename": filename,
@@ -97,9 +95,8 @@ def find_grains(masks: list[Mask], names: list[str] | None = None) -> None:
             "mask_size_y_nm": mask_size_y_nm,
             "mask_area_nm": mask_area_nm,
             "num_grains": len(mask_areas),
-            "dir": file_directory,
-            "cutoff_freq_nm": config_yaml["cutoff_freq_nm"],
-            "cutoff": config_yaml["cutoff"],
+            "cutoff_freq_nm": config_yaml["freqsplit"]["cutoff_freq_nm"],
+            "cutoff": config_yaml["freqsplit"]["cutoff"],
         }
 
         data.append(new_mask_data)
@@ -107,18 +104,20 @@ def find_grains(masks: list[Mask], names: list[str] | None = None) -> None:
 
         # Assign area data for individual grains to appropriate classes
         for key, value in new_mask_data.items():
-            setattr(mask_object, key, value)
-        mask_object.grains = {}
+            setattr(image_object, key, value)
+        image_object.grains = {}
         for i, grain_area in enumerate(mask_areas):
-            mask_object.grains[i] = Grain(grain_id=i, grain_area=grain_area)
+            image_object.grains[i] = Grain(grain_id=i, grain_area=grain_area)
 
         logger.info(
-            f"~~~ obtained {mask_object.num_grains} grains from mask {mask_num} ~~~",
+            f"~~~ obtained {image_object.num_grains} grains from mask {image_num} ~~~",
         )
 
         create_plots(filename, mask_areas, new_mask_data, nm_to_micron=NM_TO_MICRON)
 
-        save_to_csv(mask_object)
+        perovstats_object.images[image_num] = image_object
+
+    return perovstats_object
 
 
 @staticmethod
