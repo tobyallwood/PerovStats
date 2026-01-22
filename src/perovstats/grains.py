@@ -2,19 +2,15 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
-import pandas as pd
-import seaborn as sns
 from loguru import logger
-from ruamel.yaml import YAML
 from skimage.color import label2rgb
 from skimage.measure import label
 from skimage.measure import regionprops
 from skimage import morphology
 
-from .classes import ImageData, Grain, PerovStats
+from .classes import Grain, PerovStats
 from .visualisation import create_plots
 
 LOGGER = logging.getLogger(__name__)
@@ -80,6 +76,10 @@ def find_grains(perovstats_object: PerovStats) -> None:
         mask_area_nm = mask_size_x_nm * mask_size_y_nm
         grains_per_nm2 = len(mask_areas) / mask_area_nm
 
+        mean_grain_size = find_mean_grain_size(mask_areas)
+        median_grain_size = find_median_grain_size(mask_areas)
+        mode_grain_size = find_mode_grain_size(mask_areas)
+
         mask_data = {
             "mask_rgb": labelled_mask_rgb,
             "grains_per_nm2": grains_per_nm2,
@@ -87,6 +87,9 @@ def find_grains(perovstats_object: PerovStats) -> None:
             "mask_size_y_nm": mask_size_y_nm,
             "mask_area_nm": mask_area_nm,
             "num_grains": len(mask_areas),
+            "mean_grain_size": mean_grain_size,
+            "median_grain_size": median_grain_size,
+            "mode_grain_size": mode_grain_size
         }
         all_masks_data[f"{filename}-{config_yaml['freqsplit']['cutoff_freq_nm']}"] = mask_data
 
@@ -100,6 +103,9 @@ def find_grains(perovstats_object: PerovStats) -> None:
             "num_grains": len(mask_areas),
             "cutoff_freq_nm": config_yaml["freqsplit"]["cutoff_freq_nm"],
             "cutoff": config_yaml["freqsplit"]["cutoff"],
+            "mean_grain_size": mean_grain_size,
+            "median_grain_size": median_grain_size,
+            "mode_grain_size": mode_grain_size
         }
 
         data.append(new_mask_data)
@@ -119,6 +125,28 @@ def find_grains(perovstats_object: PerovStats) -> None:
         create_plots(Path(config_yaml["output_dir"]) / filename / "images", filename, mask_areas, new_mask_data, nm_to_micron=NM_TO_MICRON)
 
         perovstats_object.images[image_num] = image_object
+
+
+def find_median_grain_size(values):
+    values = sorted(values)
+    count = len(values)
+    mid = count // 2
+
+    if count % 2 == 1:
+        return values[mid]
+    else:
+        return (values[mid - 1] + values[mid]) / 2
+
+
+def find_mean_grain_size(values):
+    return sum(values) / len(values)
+
+
+def find_mode_grain_size(values):
+    counts = {}
+    for v in values:
+        counts[v] = counts.get(v, 0) + 1
+    return max(counts, key=counts.get)
 
 
 @staticmethod

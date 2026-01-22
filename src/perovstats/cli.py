@@ -3,6 +3,7 @@
 #
 # Authors:
 #   Tamora James <t.d.james@sheffield.ac.uk>
+#   Toby Allwood <t.allwood@sheffield.ac.uk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

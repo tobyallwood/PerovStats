@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 import numpy as np
 
 
@@ -83,6 +84,9 @@ class ImageData:
     cutoff_freq_nm: float | None = None
     cutoff: float | None = None
     pixel_to_nm_scaling: float | None = None
+    mean_grain_size: float | None = None
+    median_grain_size: float | None = None
+    mode_grain_size: float | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -96,6 +100,9 @@ class ImageData:
             "cutoff_freq_nm": self.cutoff_freq_nm,
             "cutoff": self.cutoff,
             "pixel_to_nm_scaling": self.pixel_to_nm_scaling,
+            "mean_grain_size_nm2": self.mean_grain_size,
+            "median_grain_size_nm2": self.median_grain_size,
+            "mode_grain_size_nm2": self.mode_grain_size
         }
 
 

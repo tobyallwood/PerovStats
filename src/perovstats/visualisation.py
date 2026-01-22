@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import matplotlib.pyplot as plt
 from loguru import logger
 import numpy.typing as npt

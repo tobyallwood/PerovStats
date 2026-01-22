@@ -1,5 +1,4 @@
 import matplotlib
-
 matplotlib.use("Agg")
 
 from yaml import safe_load
@@ -10,7 +9,6 @@ import pytest
 
 from perovstats.classes import Grain, ImageData, PerovStats
 
-MASK_THRESHOLD = 0.5
 BASE_DIR = Path.cwd()
 
 
@@ -38,7 +36,7 @@ def mask_random(image_random: np.ndarray) -> npt.NDArray:
         Random 2 dimensional boolean array
 
     """
-    return image_random > MASK_THRESHOLD
+    return image_random > 0.5
 
 
 @pytest.fixture
@@ -62,14 +60,14 @@ def dummy_grain() -> Grain:
 
 
 @pytest.fixture
-def dummy_image_data(mask_random, image_random, dummy_grain) -> ImageData:
+def dummy_image_data(mask_random, image_random, dummy_grain, tmp_path) -> ImageData:
     image_data = ImageData(
         image_original=image_random,
         mask=mask_random,
         high_pass=image_random,
         low_pass=image_random,
         grains={0: dummy_grain},
-        file_directory="file/dir",
+        file_directory=tmp_path,
         filename="dummy_filename",
         mask_rgb=mask_random,
         grains_per_nm2=2,

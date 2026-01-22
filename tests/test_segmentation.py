@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from perovstats.segmentation import clean_mask, create_grain_mask, threshold_mad, threshold_mean_std
 
 @pytest.mark.parametrize(

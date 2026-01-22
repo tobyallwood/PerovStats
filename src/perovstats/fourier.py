@@ -14,79 +14,8 @@ from .segmentation import threshold_mad, threshold_mean_std
 
 LOGGER = logging.getLogger(__name__)
 
-BASE_DIR = Path("./images")
-OUTPUT_DIR = Path("./output")
-
-# Dataset configuration
-DATA_CONFIG = [
-    {
-        "data_dir": "1st samples- just retrace - 1-2um pyramids/C60 data",
-        "height_channel": "Height Sensor",
-        "file_ext": ".spm",
-    },
-    {
-        "data_dir": "1st samples- just retrace - 1-2um pyramids/PFQNM",
-        "height_channel": "Height Sensor",
-        "file_ext": ".spm",
-    },
-    {
-        "data_dir": "1st samples- just retrace - 1-2um pyramids/Tapping mode",
-        "height_channel": "Height Sensor",
-        "file_ext": ".spm",
-    },
-    {
-        "data_dir": "2nd sample batch - just retrace - 1-2um pyramids",
-        "height_channel": "Height Sensor",
-        "file_ext": ".spm",
-    },
-    {
-        "data_dir": "2nd sample batch - trace and retrace - 1-2um pyramids",
-        "height_channel": "Height",
-        "file_ext": ".spm",
-    },
-    {
-        "data_dir": "3rd sample batch -Different sized pyramids/1-2um pyramids - PFQNM",
-        "height_channel": "Height",
-        "file_ext": ".spm",
-    },
-    {
-        "data_dir": "4th batch - trace and retrace - rehmat - MFP3d microscope - feb 2025/25_02_06_ST4-14-31",
-        "height_channel": "HeightTrace",
-        "file_ext": ".ibw",
-    },
-    {
-        "data_dir": "4th batch - trace and retrace - rehmat - MFP3d microscope - feb 2025/25_02_10_ST4-14-31",
-        "height_channel": "HeightTrace",
-        "file_ext": ".ibw",
-    },
-    {
-        "data_dir": "NuNano Scout AFM Tip - trace and retrace - 1-2um pyramids",
-        "height_channel": "Height",
-        "file_ext": ".spm",
-    },
-]
-
 
 def create_masks(perovstats_object) -> None:
-    # for cutoff_freq_nm in CUTOFF_FREQ_NM:
-    #     for config in DATA_CONFIG:
-    #         output_dir = Path(
-    #             OUTPUT_DIR,
-    #             f"cutoff_freq_nm-{cutoff_freq_nm}",
-    #             config["data_dir"],
-    #         )
-    #         arg_list = [
-    #             "-d",
-    #             Path(BASE_DIR, config["data_dir"]).as_posix(),
-    #             "-e",
-    #             config["file_ext"],
-    #             "-n",
-    #             config["height_channel"],
-    #             "-f",
-    #             cutoff_freq_nm,
-    #             "-o",
-    #             output_dir.as_posix(),
-    #         ]
     split_frequencies(perovstats_object)
 
     output_dir = Path(perovstats_object.config["output_dir"])
