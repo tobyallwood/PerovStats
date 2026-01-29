@@ -36,8 +36,12 @@ def create_masks(perovstats_object) -> None:
             threshold_func = threshold_mean_std
 
         # Cleaning config options
-        area_threshold = perovstats_object.config["mask"]["cleaning"]["area_threshold"] / (pixel_to_nm_scaling**2)
-        disk_radius = perovstats_object.config["mask"]["cleaning"]["disk_radius_factor"] / pixel_to_nm_scaling
+        area_threshold = perovstats_object.config["mask"]["cleaning"]["area_threshold"]
+        if area_threshold:
+            area_threshold = area_threshold / (pixel_to_nm_scaling**2)
+            disk_radius = perovstats_object.config["mask"]["cleaning"]["disk_radius_factor"] / pixel_to_nm_scaling
+        else:
+            disk_radius = None
 
         # Smoothing config options
         smooth_sigma = perovstats_object.config["mask"]["smoothing"]["sigma"]
@@ -75,6 +79,8 @@ def split_frequencies(perovstats_object) -> list[np.real]:
     ValueError
         If neither `cutoff` nor `cutoff_freq_nm` argument supplied.
     """
+    cutoff_freq_nm = perovstats_object.config["freqsplit"]["cutoff_freq_nm"]
+    edge_width = perovstats_object.config["freqsplit"]["edge_width"]
     output_dir = Path(perovstats_object.config["output_dir"])
 
     for image_data in perovstats_object.images:
@@ -91,19 +97,17 @@ def split_frequencies(perovstats_object) -> list[np.real]:
         LOGGER.debug("[%s] Image dimensions: ", image.shape)
         LOGGER.info("[%s] : *** Frequency splitting ***", filename)
 
-        # if cutoff_freq_nm:
-        #     cutoff = 2 * pixel_to_nm_scaling / cutoff_freq_nm
+        if cutoff_freq_nm:
+            cutoff = 2 * pixel_to_nm_scaling / cutoff_freq_nm
 
         LOGGER.info("[%s] : pixel_to_nm_scaling: %s", filename, pixel_to_nm_scaling)
 
-        # high_pass, low_pass = frequency_split(
-        #     image,
-        #     cutoff=cutoff,
-        #     edge_width=edge_width,
-        #     pixel_to_nm_scaling=pixel_to_nm_scaling,
-        # )
-
-        high_pass, low_pass = frequency_split(image)
+        high_pass, low_pass = frequency_split(
+            image,
+            cutoff=cutoff,
+            edge_width=edge_width,
+            pixel_to_nm_scaling=pixel_to_nm_scaling,
+        )
 
         image_data.high_pass = high_pass
         image_data.low_pass = low_pass
