@@ -55,10 +55,8 @@ def test_create_frequency_mask(shape: tuple, cutoff: float, width: float) -> Non
 
 
 def test_frequency_split(image_random):
-    """Test splitting an image between a given frequency cutoff."""
-    cutoff = 0.05
-    edge_width = 0
-    high_pass, low_pass = frequency_split(image_random, cutoff, edge_width)
+    """Test splitting an image between background and foreground patterns."""
+    high_pass, low_pass = frequency_split(image_random)
 
     assert high_pass.shape == image_random.shape
     assert low_pass.shape == image_random.shape
